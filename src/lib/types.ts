@@ -17,14 +17,17 @@ export interface Order {
   status: OrderStatus
 }
 
-export interface Database {
+export type Database = {
   public: {
     Tables: {
       orders: {
         Row: Order
-        Insert: Omit<Order, 'id'> & { id?: string }
+        Insert: Partial<Order>
         Update: Partial<Order>
       }
     }
+    Views: Record<string, never>
+    Functions: Record<string, never>
+    Enums: Record<string, never>
   }
 }
