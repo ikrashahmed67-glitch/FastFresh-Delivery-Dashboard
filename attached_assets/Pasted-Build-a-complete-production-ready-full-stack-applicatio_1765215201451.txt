@@ -1,0 +1,167 @@
+Build a complete production-ready full-stack application using Next.js 14 (App Router), Supabase, and TailwindCSS for the following system:
+
+1️⃣ PROJECT PURPOSE
+
+I need an order dashboard for my delivery boys.
+Orders come from my mobile app.
+When a user submits an order, it must be saved directly into Supabase Database (not Formspree).
+The delivery boys dashboard must show these orders live.
+
+2️⃣ SUPABASE CREDENTIALS
+
+Use these exact environment variables:
+
+VITE_SUPABASE_URL = https://yaflexlocwmhocjfrpov.supabase.co
+VITE_SUPABASE_ANON_KEY = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlhZmxleGxvY3dtaG9jamZycG92Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUyMDY0MTksImV4cCI6MjA4MDc4MjQxOX0.NB_KocoDo8HX3B0hRJuLF-exBdaKmMo--JNbSgqEOXk
+
+
+Create these tables (automatically if they do not exist):
+
+create table orders (
+  id uuid primary key default gen_random_uuid(),
+  customer_name text,
+  email text,
+  phone text,
+  address text,
+  city text,
+  google_location text,
+  notes text,
+  order_items text,
+  subtotal numeric,
+  delivery_charge numeric,
+  total_amount numeric,
+  order_date timestamptz default now(),
+  status text default 'Pending'
+);
+
+alter publication supabase_realtime add table orders;
+
+3️⃣ FEATURES TO BUILD
+✔️ Frontend: Next.js 14 App Router
+
+TailwindCSS + Responsive layout
+
+Mobile-first dashboard for delivery boys
+
+Light & clean UI
+
+Pages:
+
+/login
+
+/dashboard
+
+/orders/[id] (order detail page)
+
+✔️ Authentication
+
+Use Supabase Auth with Email + Password.
+
+Delivery boys can log in with username/password you provide later.
+
+Redirect rules:
+
+If not logged in → /login
+
+If logged in → /dashboard
+
+✔️ Order Submission API Route
+
+Create API route:
+
+POST /api/create-order
+
+
+It should:
+
+Accept JSON order data
+
+Insert into Supabase orders table
+
+Return success/failure response
+
+This endpoint will be used by my mobile app.
+
+✔️ Dashboard (LIVE Orders View)
+
+Build a modern dashboard that shows:
+
+Customer Name
+
+Phone
+
+Address
+
+Items
+
+Total Amount
+
+Status (Pending / Assigned / Delivered)
+
+Order date
+
+View Details button
+
+Use Supabase Realtime to get live updates.
+
+✔️ Order Details Page
+
+When delivery boy clicks an order:
+
+Show:
+
+Customer full info
+
+Google Map link
+
+Items list
+
+Totals
+
+Status update dropdown
+
+Dropdown options:
+
+Pending
+
+On The Way
+
+Delivered
+
+Update status in Supabase in realtime.
+
+4️⃣ TECH REQUIREMENTS
+
+Next.js 14 App Router
+
+TailwindCSS
+
+ShadCN UI (for nice components)
+
+Supabase client (browser + server)
+
+Realtime subscription for live orders
+
+Deploy-ready code
+
+No Formspree at all
+
+5️⃣ IMPORTANT
+
+App must run on desktop AND mobile
+
+All API routes and Supabase connections must be correct
+
+No dummy code, fully functional system
+
+Fix CORS, Supabase fetch, and Next.js edge/server errors
+
+After completion, show me:
+
+all generated routes
+
+all environment variables
+
+instructions on how to test locally
+
+▶️ Build the complete system now.

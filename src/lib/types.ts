@@ -1,4 +1,4 @@
-export type OrderStatus = 'Pending' | 'Out for delivery' | 'Delivered' | 'Cancelled'
+export type OrderStatus = 'Pending' | 'On The Way' | 'Delivered'
 
 export interface Order {
   id: string
@@ -17,17 +17,16 @@ export interface Order {
   status: OrderStatus
 }
 
-export type Database = {
-  public: {
-    Tables: {
-      orders: {
-        Row: Order
-        Insert: Partial<Order>
-        Update: Partial<Order>
-      }
-    }
-    Views: Record<string, never>
-    Functions: Record<string, never>
-    Enums: Record<string, never>
-  }
+export interface CreateOrderRequest {
+  customer_name: string
+  email?: string
+  phone: string
+  address: string
+  city?: string
+  google_location?: string
+  notes?: string
+  order_items: string
+  subtotal: number
+  delivery_charge: number
+  total_amount: number
 }
