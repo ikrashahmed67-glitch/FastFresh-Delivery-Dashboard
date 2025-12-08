@@ -7,3 +7,35 @@ expertMode = true
 [userenv.shared]
 NEXT_PUBLIC_SUPABASE_URL = "https://yaflexlocwmhocjfrpov.supabase.co"
 NEXT_PUBLIC_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlhZmxleGxvY3dtaG9jamZycG92Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUyMDY0MTksImV4cCI6MjA4MDc4MjQxOX0.NB_KocoDo8HX3B0hRJuLF-exBdaKmMo--JNbSgqEOXk"
+
+[workflows]
+runButton = "Project"
+
+[[workflows.workflow]]
+name = "Project"
+mode = "parallel"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Next.js Dev Server"
+
+[[workflows.workflow]]
+name = "Next.js Dev Server"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "npm run dev -- -p 5000 -H 0.0.0.0"
+waitForPort = 5000
+
+[workflows.workflow.metadata]
+outputType = "webview"
+
+[[ports]]
+localPort = 5000
+externalPort = 80
+
+[[ports]]
+localPort = 39353
+externalPort = 3000
