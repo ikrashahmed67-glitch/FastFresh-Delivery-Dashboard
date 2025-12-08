@@ -1,0 +1,137 @@
+You are a senior full-stack engineer.  
+Create a complete, production-ready Next.js 14 (App Router) + Supabase project for a delivery order dashboard.
+
+🔐 Supabase Credentials (use these EXACT values):
+SUPABASE_URL = "https://yaflexlocwmhocjfrpov.supabase.co"
+SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlhZmxleGxvY3dtaG9jamZycG92Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUyMDY0MTksImV4cCI6MjA4MDc4MjQxOX0.NB_KocoDo8HX3B0hRJuLF-exBdaKmMo--JNbSgqEOXk"
+
+----------------------------------------------
+### 1) PROJECT REQUIREMENTS
+----------------------------------------------
+
+Build a complete delivery-boy dashboard system:
+
+### ✔ Authentication (Supabase Magic Link)
+- /login page → user enters email → Supabase sends magic link  
+- /auth/callback page → automatically verifies session  
+- After login → redirect to /dashboard  
+- Protect all dashboard routes (redirect to /login if not logged in)
+
+### ✔ Orders Dashboard
+Create a responsive delivery dashboard for mobile + desktop.
+
+Fields (match these EXACT names):
+
+- id (uuid)
+- customer_name (text)
+- email (text)
+- phone (text)
+- address (text)
+- city (text)
+- google_location (text)
+- notes (text)
+- order_items (text)
+- subtotal (numeric)
+- delivery_charge (numeric)
+- total_amount (numeric)
+- order_date (timestamptz)
+- status (text default 'Pending')
+
+### ✔ Screens:
+1. /login  
+2. /auth/callback  
+3. /dashboard  
+   - list of all orders  
+   - status dropdown (Pending / Out for delivery / Delivered / Cancelled)  
+   - update status directly (supabase update)  
+   - realtime updates (listen to Supabase on orders table)
+
+### ✔ Realtime:
+- Whenever a new order is inserted in Supabase → auto update dashboard  
+- Whenever status changes → auto update for all logged-in users
+
+### ✔ Design:
+- TailwindCSS  
+- Clean, card-based UI  
+- Mobile-first layout  
+- Modern look (rounded-xl, shadows, spacing, good typography)
+
+### ✔ Environment:
+Automatically create file:
+.env.local
+containing:
+NEXT_PUBLIC_SUPABASE_URL=<SUPABASE_URL>
+NEXT_PUBLIC_SUPABASE_ANON_KEY=<SUPABASE_ANON_KEY>
+
+----------------------------------------------
+### 2) DATABASE SETUP (Tell Replit To Run This Automatically)
+----------------------------------------------
+
+Create the table and enable realtime:
+
+Run this SQL automatically in Supabase:
+
+create table if not exists orders (
+  id uuid primary key default gen_random_uuid(),
+  customer_name text,
+  email text,
+  phone text,
+  address text,
+  city text,
+  google_location text,
+  notes text,
+  order_items text,
+  subtotal numeric,
+  delivery_charge numeric,
+  total_amount numeric,
+  order_date timestamptz,
+  status text default 'Pending'
+);
+
+alter publication supabase_realtime add table orders;
+
+----------------------------------------------
+### 3) CALLBACK & ROUTING LOGIC
+----------------------------------------------
+
+Create:
+app/login/page.tsx  
+app/auth/callback/page.tsx  
+app/dashboard/page.tsx  
+supabase-client.ts (helper)
+
+Callback logic:
+- Read session from URL
+- Save via supabase.auth.setSession
+- Redirect instantly to /dashboard
+
+----------------------------------------------
+### 4) ORDER PAGE LOGIC
+----------------------------------------------
+
+Dashboard must:
+- Fetch orders via Supabase query
+- Listen realtime (supabase.channel)
+- Show list cleanly
+- Dropdown status update
+- Sort newest first
+
+----------------------------------------------
+### 5) FINAL TASK
+----------------------------------------------
+
+Deliver a **fully working**, error-free project where:
+
+- Login works  
+- Magic link works  
+- Callback works  
+- Orders load  
+- Realtime works  
+- Status updates work  
+- Mobile responsive  
+- No TypeScript errors  
+- No runtime errors  
+
+This MUST work on Replit without any manual fixes.
+
+Begin now.  
