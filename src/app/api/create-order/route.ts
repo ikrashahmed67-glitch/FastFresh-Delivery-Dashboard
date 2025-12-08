@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
-import { CreateOrderRequest } from '@/lib/types'
+import { CreateOrderRequest, OrderStatus } from '@/lib/types'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 
 const supabase = createClient(supabaseUrl, supabaseAnonKey)
+
+const VALID_STATUSES: OrderStatus[] = ['Pending', 'On The Way', 'Delivered', 'Cancelled']
 
 export async function POST(request: NextRequest) {
   try {
@@ -17,6 +19,10 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       )
     }
+
+    const status = body.status && VALID_STATUSES.includes(body.status) 
+      ? body.status 
+      : 'Pending'
 
     const { data, error } = await supabase
       .from('orders')
@@ -32,7 +38,7 @@ export async function POST(request: NextRequest) {
         subtotal: body.subtotal || 0,
         delivery_charge: body.delivery_charge || 0,
         total_amount: body.total_amount || 0,
-        status: 'Pending',
+        status: status,
       })
       .select()
       .single()

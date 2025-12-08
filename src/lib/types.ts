@@ -1,4 +1,4 @@
-export type OrderStatus = 'Pending' | 'On The Way' | 'Delivered'
+export type OrderStatus = 'Pending' | 'On The Way' | 'Delivered' | 'Cancelled'
 
 export interface Order {
   id: string
@@ -26,7 +26,8 @@ export interface CreateOrderRequest {
   google_location?: string
   notes?: string
   order_items: string
-  subtotal: number
-  delivery_charge: number
-  total_amount: number
+  subtotal?: number
+  delivery_charge?: number
+  total_amount?: number
+  status?: OrderStatus
 }
