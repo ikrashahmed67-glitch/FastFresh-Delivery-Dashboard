@@ -1,52 +1,71 @@
-import { NextResponse } from "next/server";
+import { NextResponse } from "next/server"
+import { createClient } from "@supabase/supabase-js"
+
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
+const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!
+
+const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
 
 export async function POST(req: Request) {
   try {
-    const body = await req.json();
+    const body = await req.json()
+    console.log("📥 Incoming Order Data:", body)
 
-    console.log("✅ Order received from main site:", body);
+    const {
+      customer_name,
+      phone,
+      address,
+      order_items,
+      city,
+      email,
+      google_location,
+      subtotal,
+      delivery_charge,
+      total_amount,
+      notes,
+      status,
+      created_at,
+    } = body
 
-    // --- Supabase connection ---
-    const res = await fetch("https://yaflexlocwmhocjfrpov.supabase.co/rest/v1/orders", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        apikey: process.env.SUPABASE_SERVICE_ROLE_KEY!,
-        Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY!}`,
-        Prefer: "return=minimal",
-      },
-      body: JSON.stringify({
-        customer_name: body.customer_name,
-        customer_email: body.customer_email,
-        customer_phone: body.customer_phone,
-        delivery_address: body.delivery_address,
-        city: body.city,
-        google_location: body.google_location,
-        total_amount: body.total_amount,
-        items: body.items,
-      }),
-    });
-
-    if (!res.ok) {
-      const text = await res.text();
-      console.error("❌ Supabase insert failed:", text);
-      return NextResponse.json({ error: "Failed to insert in Supabase" }, { status: 500 });
+    // 🧩 Validate required fields
+    if (!customer_name || !phone || !address || !order_items) {
+      return NextResponse.json(
+        { error: "Missing required fields: customer_name, phone, address, order_items", success: false },
+        { status: 400 }
+      )
     }
 
-    return NextResponse.json({ success: true });
-  } catch (err: any) {
-    console.error("❌ Error in create-order API:", err);
-    return NextResponse.json({ error: err.message }, { status: 500 });
-  }
-}
+    // 🗄️ Insert into Supabase
+    const { data, error } = await supabase
+      .from("orders")
+      .insert([
+        {
+          customer_name,
+          phone,
+          address,
+          city,
+          email,
+          google_location,
+          subtotal,
+          delivery_charge,
+          total_amount,
+          notes,
+          status: status || "Pending",
+          order_items,
+          created_at: created_at || new Date().toISOString(),
+        },
+      ])
+      .select()
 
-// ✅ Allow CORS (important)
-export async function OPTIONS() {
-  return NextResponse.json({}, {
-    headers: {
-      "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Methods": "POST, OPTIONS",
-      "Access-Control-Allow-Headers": "Content-Type, Authorization",
-    },
-  });
+    if (error) {
+      console.error("❌ Supabase insert error:", error)
+      return NextResponse.json({ error: error.message, success: false }, { status: 500 })
+    }
+
+    console.log("✅ Order saved successfully:", data)
+    return NextResponse.json({ success: true, data })
+  } catch (err) {
+    console.error("❌ API Error:", err)
+    return NextResponse.json({ error: "Server error", success: false }, { status: 500 })
+  }
 }
