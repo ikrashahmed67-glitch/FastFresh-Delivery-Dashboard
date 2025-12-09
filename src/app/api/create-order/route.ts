@@ -1,83 +1,55 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
-import { CreateOrderRequest, OrderStatus } from '@/lib/types'
+import { NextResponse } from "next/server";
+import { createClient } from "@supabase/supabase-js";
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-const supabase = createClient(supabaseUrl, supabaseAnonKey)
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+);
 
-const VALID_STATUSES: OrderStatus[] = ['Pending', 'On The Way', 'Delivered', 'Cancelled']
+export async function POST(req: Request) {
+  try {
+    const data = await req.json();
 
-// ✅ Handle CORS preflight
+    console.log("📥 Received order:", data);
+
+    const { error } = await supabase.from("orders").insert([
+      {
+        customer_name: data.customer_name,
+        email: data.email,
+        phone: data.phone,
+        address: data.address,
+        city: data.city,
+        google_location: data.google_location,
+        subtotal: data.subtotal,
+        delivery_charge: data.delivery_charge,
+        total_amount: data.total_amount,
+        status: data.status || "Pending",
+        created_at: new Date().toISOString(),
+        order_items: data.order_items,
+      },
+    ]);
+
+    if (error) {
+      console.error("❌ Supabase insert error:", error);
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    console.log("✅ Order saved to Supabase");
+    return NextResponse.json({ success: true, message: "Order saved successfully" }, { status: 200 });
+  } catch (err) {
+    console.error("❌ API Error:", err);
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+  }
+}
+
+// ✅ CORS Support (for requests from main website)
 export async function OPTIONS() {
   return new NextResponse(null, {
     status: 200,
     headers: {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'POST, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "POST, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type, Authorization",
     },
-  })
-}
-
-export async function POST(request: NextRequest) {
-  try {
-    const body: CreateOrderRequest = await request.json()
-
-    // ✅ CORS headers for POST response
-    const corsHeaders = {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'POST, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-    }
-
-    if (!body.customer_name || !body.phone || !body.address || !body.order_items) {
-      return NextResponse.json(
-        { success: false, error: 'Missing required fields: customer_name, phone, address, order_items' },
-        { status: 400, headers: corsHeaders }
-      )
-    }
-
-    const status = body.status && VALID_STATUSES.includes(body.status) 
-      ? body.status 
-      : 'Pending'
-
-    const { data, error } = await supabase
-      .from('orders')
-      .insert({
-        customer_name: body.customer_name,
-        email: body.email || null,
-        phone: body.phone,
-        address: body.address,
-        city: body.city || null,
-        google_location: body.google_location || null,
-        notes: body.notes || null,
-        order_items: body.order_items || '',
-        subtotal: body.subtotal || 0,
-        delivery_charge: body.delivery_charge || 0,
-        total_amount: body.total_amount || 0,
-        status,
-      })
-      .select()
-      .single()
-
-    if (error) {
-      console.error('Supabase error:', error)
-      return NextResponse.json(
-        { success: false, error: error.message },
-        { status: 500, headers: corsHeaders }
-      )
-    }
-
-    return NextResponse.json(
-      { success: true, order: data },
-      { status: 201, headers: corsHeaders }
-    )
-  } catch (err) {
-    console.error('API error:', err)
-    return NextResponse.json(
-      { success: false, error: 'Internal server error' },
-      { status: 500, headers: { 'Access-Control-Allow-Origin': '*' } }
-    )
-  }
+  });
 }
