@@ -1,47 +1,52 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
 
-// 🔐 Supabase client setup using environment variables
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
-
-// ✅ Handle POST requests (main website se orders aayenge)
 export async function POST(req: Request) {
   try {
     const body = await req.json();
 
-    // 🧾 Insert new order into Supabase
-    const { data, error } = await supabase.from("orders").insert([
-      {
+    console.log("✅ Order received from main site:", body);
+
+    // --- Supabase connection ---
+    const res = await fetch("https://yaflexlocwmhocjfrpov.supabase.co/rest/v1/orders", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        apikey: process.env.SUPABASE_SERVICE_ROLE_KEY!,
+        Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY!}`,
+        Prefer: "return=minimal",
+      },
+      body: JSON.stringify({
         customer_name: body.customer_name,
-        email: body.email,
-        phone: body.phone,
-        address: body.address,
+        customer_email: body.customer_email,
+        customer_phone: body.customer_phone,
+        delivery_address: body.delivery_address,
         city: body.city,
         google_location: body.google_location,
         total_amount: body.total_amount,
-        items: body.items, // should be an array
-        status: body.status || "Pending",
-        created_at: body.created_at || new Date().toISOString(),
-      },
-    ]);
+        items: body.items,
+      }),
+    });
 
-    if (error) {
-      console.error("❌ Supabase insert error:", error);
-      return NextResponse.json({ error: error.message }, { status: 500 });
+    if (!res.ok) {
+      const text = await res.text();
+      console.error("❌ Supabase insert failed:", text);
+      return NextResponse.json({ error: "Failed to insert in Supabase" }, { status: 500 });
     }
 
-    console.log("✅ Order saved to Supabase:", data);
-    return NextResponse.json({ success: true, data }, { status: 200 });
+    return NextResponse.json({ success: true });
   } catch (err: any) {
-    console.error("❌ API error:", err);
-    return NextResponse.json({ error: "Server error" }, { status: 500 });
+    console.error("❌ Error in create-order API:", err);
+    return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }
 
-// Optional: To handle other methods
-export function GET() {
-  return NextResponse.json({ message: "Only POST requests are allowed." }, { status: 405 });
+// ✅ Allow CORS (important)
+export async function OPTIONS() {
+  return NextResponse.json({}, {
+    headers: {
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "POST, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type, Authorization",
+    },
+  });
 }
