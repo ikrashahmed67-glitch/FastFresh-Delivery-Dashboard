@@ -1,71 +1,51 @@
 import { NextResponse } from "next/server"
 import { createClient } from "@supabase/supabase-js"
 
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!
-
-const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
-
 export async function POST(req: Request) {
   try {
     const body = await req.json()
-    console.log("📥 Incoming Order Data:", body)
 
-    const {
-      customer_name,
-      phone,
-      address,
-      order_items,
-      city,
-      email,
-      google_location,
-      subtotal,
-      delivery_charge,
-      total_amount,
-      notes,
-      status,
-      created_at,
-    } = body
-
-    // 🧩 Validate required fields
-    if (!customer_name || !phone || !address || !order_items) {
+    const required = ["customer_name", "phone", "address", "order_items"]
+    const missing = required.filter((key) => !body[key])
+    if (missing.length > 0) {
       return NextResponse.json(
-        { error: "Missing required fields: customer_name, phone, address, order_items", success: false },
+        { success: false, error: `Missing fields: ${missing.join(", ")}` },
         { status: 400 }
       )
     }
 
-    // 🗄️ Insert into Supabase
-    const { data, error } = await supabase
-      .from("orders")
-      .insert([
-        {
-          customer_name,
-          phone,
-          address,
-          city,
-          email,
-          google_location,
-          subtotal,
-          delivery_charge,
-          total_amount,
-          notes,
-          status: status || "Pending",
-          order_items,
-          created_at: created_at || new Date().toISOString(),
-        },
-      ])
-      .select()
+    // ✅ Create Supabase client (Server-side key use karo)
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      { auth: { persistSession: false } }
+    )
 
-    if (error) {
-      console.error("❌ Supabase insert error:", error)
-      return NextResponse.json({ error: error.message, success: false }, { status: 500 })
-    }
+    const { error } = await supabase.from("orders").insert([
+      {
+        customer_name: body.customer_name,
+        phone: body.phone,
+        address: body.address,
+        city: body.city || "Multan",
+        order_items: body.order_items,
+        total_amount: body.total_amount || 0,
+        created_at: new Date().toISOString(),
+      },
+    ])
 
-    console.log("✅ Order saved successfully:", data)
-    return NextResponse.json({ success: true, data })
-  } catch (err) {
-    console.error("❌ API Error:", err)
-    return NextResponse.json({ error: "Server error", success: false }, { status: 500 })
+    if (error) throw error
+
+    return NextResponse.json({ success: true, message: "✅ Order saved!" })
+  } catch (error: any) {
+    console.error("API ERROR:", error.message)
+    return NextResponse.json(
+      { success: false, error: error.message || "Server Error" },
+      { status: 500 }
+    )
   }
+}
+
+// 🧠 Allow only POST (avoid 405 confusion)
+export async function GET() {
+  return NextResponse.json({ message: "Only POST method allowed" }, { status: 405 })
 }
